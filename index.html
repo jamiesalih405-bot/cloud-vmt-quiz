@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<title>Cloud Quiz – 50 unika frågor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{font-family:system-ui;background:#0f172a;color:#e5e7eb;margin:0}
+header{background:linear-gradient(135deg,#2563eb,#38bdf8);padding:1.5rem;text-align:center;color:white}
+main{max-width:760px;margin:0 auto;padding:2rem 1rem 6rem}
+.card{background:#020617;border-radius:14px;padding:1.8rem}
+.answers button{display:block;width:100%;margin:.5rem 0;padding:.8rem;border-radius:10px;border:1px solid #334155;background:#020617;color:#e5e7eb;text-align:left}
+.correct{background:#14532d;border-color:#22c55e}
+.wrong{background:#7f1d1d;border-color:#ef4444}
+.explanation{margin-top:1rem;padding:1rem;border-radius:10px;border:1px solid #334155}
+.footer{position:fixed;bottom:0;left:0;right:0;background:#020617;border-top:1px solid #334155;padding:.8rem 1rem;display:flex;justify-content:space-between}
+.footer button{background:#2563eb;color:white;border:none;border-radius:8px;padding:.5rem 1rem}
+code{background:#020617;border:1px solid #334155;padding:.2rem .4rem;border-radius:4px}
+</style>
+</head>
+<body>
+
+<header>
+<h1>Virtuell & Molnbaserad Nätverksteknik</h1>
+<p>50 helt unika frågor – teori + praktik</p>
+</header>
+
+<main>
+<div class="card">
+<h3 id="question"></h3>
+<div id="answers" class="answers"></div>
+<div id="explanation" class="explanation" style="display:none"></div>
+</div>
+</main>
+
+<div class="footer">
+<span id="progress"></span>
+<button id="nextBtn" onclick="nextQ()" disabled>Nästa →</button>
+</div>
+
+<script>
+const questions = [
+{q:"Vad är huvudsyftet med virtualisering?",c:"Att dela fysisk hårdvara mellan flera isolerade system",e:"Virtualisering gör att flera VM kan dela samma hårdvara säkert.",w:["Att ersätta nätverk","Att eliminera operativsystem","Att öka CPU-klockfrekvens"]},
+{q:"Vad gör en hypervisor?",c:"Skapar och isolerar virtuella maskiner",e:"Hypervisorn hanterar VM:ers resurser och isolering.",w:["Utför routing","Tilldelar IP-adresser","Fungerar som brandvägg"]},
+{q:"Vad kännetecknar en Typ 1-hypervisor?",c:"Kör direkt på hårdvaran",e:"Typ 1 används i datacenter och moln.",w:["Kör ovanpå Windows","Kör i en VM","Är en container"]},
+{q:"Vad är en Typ 2-hypervisor?",c:"Kör ovanpå ett operativsystem",e:"Används ofta för labb och test.",w:["Kör på bare metal","Är molnportal","Är router"]},
+{q:"Vad är en virtuell maskin (VM)?",c:"Ett isolerat operativsystem på en hypervisor",e:"VM upplever egen CPU, minne och disk.",w:["En container","En fysisk server","Ett nätverk"]},
+{q:"Vad är ett vNIC?",c:"Ett virtuellt nätverkskort",e:"vNIC kopplar VM till virtuellt nät.",w:["Virtuell disk","Virtuell CPU","Virtuell switch"]},
+{q:"Vad gör en virtuell switch?",c:"Kopplar VM:er på Layer 2",e:"vSwitch fungerar som fysisk switch i mjukvara.",w:["Utför routing","Delar ut IP","Krypterar trafik"]},
+{q:"Var körs Open vSwitch (OVS)?",c:"På hypervisorn (hosten)",e:"OVS är en del av nätverksinfrastrukturen.",w:["Inuti VM","I fysisk router","I molnportalen"]},
+{q:"Vad är Open vSwitch?",c:"En avancerad mjukvarubaserad switch",e:"OVS stödjer bl.a. VLAN och VXLAN.",w:["En hypervisor","En brandvägg","En DNS-server"]},
+{q:"Vad är underlay-nätverket?",c:"Det fysiska nätverket",e:"Består av kablar, switchar och routrar.",w:["Ett virtuellt nät","Ett VLAN","Ett overlay"]},
+{q:"Vad är overlay-nätverket?",c:"Virtuellt nät ovanpå underlay",e:"Ger flexibilitet och isolering.",w:["Fysiskt nät","LAN","WAN"]},
+{q:"Vad betyder VXLAN?",c:"Virtual eXtensible LAN",e:"Ett overlay-protokoll.",w:["Virtual XML LAN","Extended VLAN","Encrypted LAN"]},
+{q:"Vad kapslar VXLAN in?",c:"Layer 2-trafik i UDP",e:"Gör L2 möjligt över L3.",w:["IP i TCP","DNS i UDP","ICMP i IP"]},
+{q:"Hur många nät möjliggör VXLAN ungefär?",c:"Cirka 16 miljoner",e:"VXLAN använder 24-bitars VNI.",w:["4096","65536","1024"]},
+{q:"Vad är distribuerad routing?",c:"Routing nära VM:erna",e:"Minskar latens och flaskhalsar.",w:["Routing i molnportal","Central routing","Routing i switch"]},
+{q:"Vad är central routing?",c:"Routing via en central nod",e:"Kan bli flaskhals i stora miljöer.",w:["Routing utan router","Routing i VM","Routing i OVS"]},
+{q:"Vad är Azure VNet?",c:"Ett virtuellt nätverk i Azure",e:"Används för att bygga molnnätverk.",w:["En fysisk switch","En VM","En router"]},
+{q:"Vad används subnät till?",c:"Logisk uppdelning av nätverk",e:"Ger struktur och säkerhet.",w:["Kryptering","Routing","Backup"]},
+{q:"Vad är NSG i Azure?",c:"Distribuerad brandvägg",e:"NSG filtrerar trafik till resurser.",w:["Virtuell switch","Hypervisor","VM"]},
+{q:"Vad baseras NSG-regler på?",c:"Källa, destination, port och protokoll",e:"Regler styr exakt vilken trafik som tillåts.",w:["Endast IP","Endast port","Endast protokoll"]},
+{q:"Vad är mikrosegmentering?",c:"Isolering per VM",e:"Begränsar spridning av attacker.",w:["VPN","NAT","Central brandvägg"]},
+{q:"Vad innebär Zero Trust?",c:"Ingen trafik är betrodd som standard",e:"All åtkomst måste verifieras.",w:["Intern trafik är alltid säker","Brandvägg räcker","Endast extern trafik kontrolleras"]},
+{q:"Vad ansvarar OSI Layer 2 för?",c:"MAC-adresser och switching",e:"Layer 2 hanterar lokal trafik.",w:["IP-routing","Applikationer","Kryptering"]},
+{q:"Vad ansvarar OSI Layer 3 för?",c:"IP-adresser och routing",e:"Layer 3 kopplar samman nät.",w:["Switching","Kryptering","Applikationer"]},
+{q:"Vad gör DHCP?",c:"Tilldelar IP-adresser automatiskt",e:"DHCP är separat från switching.",w:["Routing","Switching","Kryptering"]},
+{q:"Tilldelar en switch IP-adresser?",c:"Nej",e:"Switchar vidarebefordrar Ethernet-ramar.",w:["Ja alltid","Endast virtuell","Endast fysisk"]},
+{q:"Vad är skillnaden mellan VM och container?",c:"Containrar delar OS-kärna",e:"VM har eget OS, containrar inte.",w:["De är samma","Containrar kräver hypervisor","VM är lättare"]},
+{q:"Vad gör kommandot <code>apk add openvswitch</code>?",c:"Installerar Open vSwitch på Alpine",e:"apk är Alpines pakethanterare.",w:["Startar OVS","Skapar en bridge","Uppdaterar kernel"]},
+{q:"Vad gör <code>apk update</code>?",c:"Uppdaterar paketindex",e:"Nödvändigt innan installation.",w:["Installerar paket","Rensar cache","Uppgraderar kernel"]},
+{q:"Vad gör <code>ip link set eth0 up</code>?",c:"Aktiverar nätverksgränssnittet",e:"Interface måste vara uppe för trafik.",w:["Ger IP-adress","Startar DHCP","Skapar interface"]},
+{q:"Vad gör <code>udhcpc -i eth0</code>?",c:"Begär IP-adress via DHCP",e:"Alpines DHCP-klient.",w:["Sätter statisk IP","Pingar gateway","Startar nätverk"]},
+{q:"Vad gör <code>ovs-vsctl add-br ovs-br0</code>?",c:"Skapar en OVS-bridge",e:"Bridgen fungerar som virtuell switch.",w:["Tar bort bridge","Startar OVS","Skapar VLAN"]},
+{q:"Vad gör <code>ovs-vsctl show</code>?",c:"Visar OVS-konfiguration",e:"Används för verifiering.",w:["Ändrar config","Startar tjänst","Skapar port"]},
+{q:"Vad är dnsmasq?",c:"DHCP- och DNS-tjänst",e:"Används ofta i virtuella nät.",w:["Router","Switch","Hypervisor"]},
+{q:"Vad gör <code>systemctl enable ovs-vswitchd</code>?",c:"Startar OVS automatiskt vid boot",e:"Aktiverar tjänst permanent.",w:["Startar VM","Installerar OVS","Skapar bridge"]},
+{q:"Vad är Infrastructure as Code (IaC)?",c:"Infrastruktur definierad i kod",e:"Används för automation och repeterbarhet.",w:["Manuell konfiguration","Backup","Virtualisering"]},
+{q:"Vad är NAT?",c:"Översättning mellan IP-adresser",e:"Vanligt för internetåtkomst.",w:["Routing","Switching","Kryptering"]},
+{q:"Vad är VPN?",c:"Krypterad tunnel över nätverk",e:"Används för säker fjärranslutning.",w:["Öppet nät","Routingprotokoll","Switch"]},
+{q:"Vad är ett hybridmoln?",c:"Kombination av lokalt och publikt moln",e:"Vanlig företagslösning.",w:["Endast publikt","Endast privat","Endast lokalt"]},
+{q:"Vad är IaaS?",c:"Infrastruktur som tjänst",e:"Ger VM, nätverk och lagring.",w:["Applikation","Plattform","Programvara"]},
+{q:"Vad är PaaS?",c:"Plattform som tjänst",e:"OS och runtime hanteras av leverantör.",w:["Virtuell maskin","Router","Hypervisor"]},
+{q:"Vad är SaaS?",c:"Färdig applikation som tjänst",e:"Ingen infrastruktur hanteras av kund.",w:["Virtuellt nät","Container","Hypervisor"]},
+{q:"Vad är CIDR?",c:"Notation för IP-adressrymd",e:"Används vid nätverksdesign.",w:["DNS-format","MAC-adress","VLAN-ID"]},
+{q:"Vad är huvudmålet med nätverksdesign i moln?",c:"Skalbarhet och säkerhet",e:"Bra design minskar risk och kostnad.",w:["Kryptering","DNS","Switching"]}
+];
+
+let i=0,score=0;
+function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+function loadQ(){
+ const q=questions[i];
+ document.getElementById("question").innerHTML=q.q;
+ document.getElementById("progress").innerText=`Fråga ${i+1} / ${questions.length}`;
+ const a=document.getElementById("answers");a.innerHTML="";
+ document.getElementById("explanation").style.display="none";
+ document.getElementById("nextBtn").disabled=true;
+ shuffle([q.c,...q.w]).forEach(opt=>{
+  const b=document.createElement("button");b.innerHTML=opt;
+  b.onclick=()=>{
+    [...a.children].forEach(x=>x.disabled=true);
+    if(opt===q.c){b.classList.add("correct");score++;document.getElementById("explanation").innerHTML="✅ Rätt<br><br>"+q.e;}
+    else{b.classList.add("wrong");[...a.children].forEach(x=>{if(x.innerHTML===q.c)x.classList.add("correct")});document.getElementById("explanation").innerHTML="❌ Fel<br><br>"+q.e;}
+    document.getElementById("explanation").style.display="block";
+    document.getElementById("nextBtn").disabled=false;
+  };
+  a.appendChild(b);
+ });
+}
+function nextQ(){
+ i++;
+ if(i<questions.length) loadQ();
+ else{
+  document.getElementById("question").innerText="Klar!";
+  document.getElementById("answers").innerHTML="";
+  document.getElementById("explanation").style.display="block";
+  document.getElementById("explanation").innerHTML=`🎉 Resultat: ${score} / ${questions.length}`;
+  document.getElementById("nextBtn").disabled=true;
+ }
+}
+loadQ();
+</script>
+</body>
+</html>
