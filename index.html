@@ -107,7 +107,10 @@ function loadQ(){
   b.onclick=()=>{
     [...a.children].forEach(x=>x.disabled=true);
     if(opt===q.c){b.classList.add("correct");score++;document.getElementById("explanation").innerHTML="✅ Rätt<br><br>"+q.e;}
-    else{b.classList.add("wrong");[...a.children].forEach(x=>{if(x.innerHTML===q.c)x.classList.add("correct")});document.getElementById("explanation").innerHTML="❌ Fel<br><br>"+q.e;}
+    else{b.classList.add("wrong");[...a.children].forEach(x=>{if(x.innerHTML===q.c)x.classList.add("correct")});document.getElementById("explanation").innerHTML =
+  "❌ Fel<br><br><strong>Correct answer:</strong> " + q.c +
+  "<br><br>" + q.e;
+
     document.getElementById("explanation").style.display="block";
     document.getElementById("nextBtn").disabled=false;
   };
